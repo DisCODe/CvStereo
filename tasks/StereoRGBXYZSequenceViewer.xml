@@ -16,51 +16,51 @@
 	<!-- task definition -->
 	<Subtasks>
 		<Subtask name="Processing">
-			<Executor name="ExecDisp" period="1">
+			<Executor name="Processing" period="0.5">
 				<Component name="NextImageTrigger" type="CvBasic:Trigger" priority="1" bump="0">
 				</Component>
-				<Component name="Sequence" type="CvStereo:StereoSequence" priority="2" bump="0">
-					<param name="sequence.directory">/home/dkaczmar/stereo/output/</param>
-					<param name="sequence.pattern">*</param>
+				<Component name="SequenceRGB" type="CvBasic:Sequence" priority="2" bump="0">
+					<param name="sequence.directory">%[TASK_LOCATION]%/../data/bible_rgbxyz/</param>
+					<param name="sequence.pattern">.*\_rgb\.png</param>
 					<param name="mode.loop">1</param>
-					<param name="mode.auto_trigger">1</param>						
+					<param name="mode.auto_trigger">0</param>						
 				</Component>
-				<Component name="DepthConventer" type="CvStereo:DepthConventer" priority="6" bump="0">
+				<Component name="SequenceXYZ" type="CvBasic:Sequence" priority="3" bump="0">
+					<param name="sequence.directory">%[TASK_LOCATION]%/../data/bible_rgbxyz/</param>
+					<param name="sequence.pattern">.*\_xyz\.yml</param>
+					<param name="mode.loop">1</param>
+					<param name="mode.auto_trigger">0</param>						
 				</Component>
-			</Executor>
-
-			<Executor name="WriterExec" period="1">
-				<Component name="StereoWriter" type="CvStereo:StereoWriter" priority="1" bump="0">
-					<param name="save.directory">/home/dkaczmar/stereo/output/</param>
-					<param name="save.filename">stereo_img</param>
+				<Component name="DepthRainbow" type="CvStereo:DepthRainbow" priority="4" bump="0">
 				</Component>
 			</Executor>
 		</Subtask>	
 
 		<Subtask name="Display">
-			<Executor name="DisplayExec" period="1">
-				<Component name="WindowCloud" type="PCL:CloudViewer" priority="1" bump="0">
-					<param name="window_name">Depth Cloud</param>
+			<Executor name="Display" period="0.1">
+				<Component name="Window" type="CvBasic:CvWindow" priority="1" bump="0">
+					<param name="count">2</param>
+					<param name="title">RGB, Depth XYZ</param>
 				</Component>
 			</Executor>
 		</Subtask>	
+
 	</Subtasks>
 	
 	<!-- pipes connecting datastreams -->
 	<DataStreams>
 		<Source name="NextImageTrigger.out_trigger">
-			<sink>Sequence.in_trigger</sink>
+			<sink>SequenceRGB.in_trigger</sink>
+			<sink>SequenceXYZ.in_trigger</sink>
 		</Source>
-		<Source name="Sequence.out_rgb_stereo">
-			<sink>DepthConventer.in_rgb_stereo</sink>
-			<sink>StereoWriter.in_rgb_stereo</sink>
+		<Source name="SequenceRGB.out_img">
+			<sink>Window.in_img0</sink>
 		</Source>
-		<Source name="Sequence.out_depth_xyz">
-			<sink>DepthConventer.in_depth_xyz</sink>
-			<sink>StereoWriter.in_depth_xyz</sink>
+		<Source name="SequenceXYZ.out_img">
+			<sink>DepthRainbow.in_depth_xyz</sink>
 		</Source>
-		<Source name="DepthConventer.out_cloud_xyzrgb">
-			<sink>WindowCloud.in_cloud_xyzrgb</sink>
+		<Source name="DepthRainbow.out_depth_rainbow">
+			<sink>Window.in_img1</sink>
 		</Source>
 	</DataStreams>
 </Task>

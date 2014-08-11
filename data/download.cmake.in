@@ -9,6 +9,7 @@ include(DisCODeMacros)
 
 
 GET_DATASET(@PROJECT_SOURCE_DIR@/data bible_lr)
+GET_DATASET(@PROJECT_SOURCE_DIR@/data bible_rgbxyz)
 
 
 

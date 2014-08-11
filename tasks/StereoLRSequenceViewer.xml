@@ -16,7 +16,7 @@
 	<!-- task definition -->
 	<Subtasks>
 		<Subtask name="Processing">
-			<Executor name="ExecDisp" period="1">
+			<Executor name="Processing" period="1">
 				<Component name="NextImageTrigger" type="CvBasic:Trigger" priority="1" bump="0">
 				</Component>
 				<Component name="SequenceLeft" type="CvBasic:Sequence" priority="2" bump="0">
@@ -35,7 +35,7 @@
 		</Subtask>	
 
 		<Subtask name="Display">
-			<Executor name="DisplayExec" period="1">
+			<Executor name="Display" period="1">
 				<Component name="Window" type="CvBasic:CvWindow" priority="1" bump="0">
 					<param name="count">2</param>
 					<param name="title">Left, Right</param>
