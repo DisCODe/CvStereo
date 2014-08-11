@@ -33,7 +33,7 @@ Stereo sequences from files:
    * __StereoLRSequenceToRGBXYZViewer__ - Displays a sequence of stereo (RGB and depth XYZ) images generated from pairs of left-right (LR) camera images. Enables writing of RGB-XYZ pairs to files (in png and yml format respectivelly). 
 
    * __StereoLRSequenceToCloudViewer__ - Displays point clouds generated from a sequence of stereo-images (LR). Enables writing of point cloud to PCD files.
-   * __StereoXYZRGBSequenceViewer__ - Displays a sequence of  stereo-images (RGB and depth XYZ).
+   * __StereoRGBXYZSequenceViewer__ - Displays a sequence of  stereo-images (RGB and depth XYZ).
 
 
 Developers
