@@ -20,7 +20,7 @@ Datasets
 Call __make dataset__ from the build directory in order to download and unrar the files required by exemplary tasks.
    * data/bible_lr - contains images acquited from left and right camera of the Velma's active head
    * data/bible_rgbxyz - dataset containing RGB-D images (pairs of RGB and XYZ files)    
-
+   
 Tasks
 ------------
 Velma acquisition:
