@@ -16,7 +16,7 @@
 	<!-- task definition -->
 	<Subtasks>
 		<Subtask name="Processing">
-			<Executor name="ExecDisp" period="1">
+			<Executor name="ExecProc" period="1">
 				<Component name="SourceLeft" type="CameraPGR:CameraPGR" priority="1" bump="-1">
 					<!--<param name="device">1</param>-->
 					<param name="camera_serial">13201068</param>
@@ -49,6 +49,7 @@
 		</Subtask>	
 
 		<Subtask name="Display">
+			<Executor name="ExecDisp" period="1">
 				<Component name="CloudViewer" type="PCL:CloudViewer" priority="1" bump="0">
 					<param name="count">1</param>
 					<param name="title">Stereo Cloud</param>
