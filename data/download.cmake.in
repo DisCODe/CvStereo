@@ -8,9 +8,5 @@ set(CMAKE_MODULE_PATH ${DisCODe_DIR} ${CMAKE_MODULE_PATH})
 include(DisCODeMacros)
 
 
-GET_DATASET(@PROJECT_SOURCE_DIR@/data bible_lr)
-GET_DATASET(@PROJECT_SOURCE_DIR@/data bible_rgbxyz)
-
-
-
+GET_DATASET(@PROJECT_SOURCE_DIR@/data stereo_bible_lr)
 
