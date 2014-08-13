@@ -82,7 +82,7 @@ void DepthConventer::CalculateDepthMap() {
                 pcl::PointXYZRGB point1;
                 point1.x = point[0];
                 point1.y = point[1];
-                point1.z = -point[2];
+                point1.z = point[2];
                 uint32_t rgb = (static_cast<uint32_t>(pr) << 16 | static_cast<uint32_t>(pg) << 8 | static_cast<uint32_t>(pb));
                 point1.rgb = *reinterpret_cast<float*>(&rgb);
                 cloud->push_back(point1);
