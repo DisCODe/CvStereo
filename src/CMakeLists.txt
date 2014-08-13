@@ -29,11 +29,11 @@ DISCODE_FIND_DCL(CvCoreTypes)
 # Add source directories
 # ##############################################################################
 
-# CvBlobs components
+# Components
 ADD_SUBDIRECTORY(Components)
 
-# CvBlobs types
-ADD_SUBDIRECTORY(Types)
+# Types
+#ADD_SUBDIRECTORY(Types)
 
 # Prepare config file to use from another DCLs
 CONFIGURE_FILE(CvStereoConfig.cmake.in ${CMAKE_INSTALL_PREFIX}/CvStereoConfig.cmake @ONLY)

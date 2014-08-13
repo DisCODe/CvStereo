@@ -2,8 +2,4 @@
 ADD_COMPONENT(StereoEstimator)
 ADD_COMPONENT(DepthConverter)
 ADD_COMPONENT(DepthRainbow)
-ADD_COMPONENT(CenterMassGenerator)
-ADD_COMPONENT(CubicMaskExtractor)
 ADD_COMPONENT(DepthTransform)
-ADD_COMPONENT(Test)
-ADD_COMPONENT(TransformParameterGenerator)
