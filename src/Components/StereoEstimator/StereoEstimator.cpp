@@ -28,11 +28,13 @@ StereoEstimator::StereoEstimator(const std::string & name) :
         speckleWindowSize("speckleWindowSize", int(100)),
         uniquenessRatio("uniquenessRatio", int(10)),
         textureThreshold("textureThreshold", int(10)),
-        algorythm_type("algorythm_type", STEREO_SGBM)
+        algorythm_type("algorythm_type", STEREO_SGBM, "combo")
 {
     bm = NULL;
     sgbm = NULL;
-
+    algorythm_type.addConstraint(STEREO_BM);
+    algorythm_type.addConstraint(STEREO_SGBM);
+    algorythm_type.addConstraint(STEREO_HH);
     registerProperty(algorythm_type);
     numberOfDisparities.addConstraint("1");
     numberOfDisparities.addConstraint("9999");
