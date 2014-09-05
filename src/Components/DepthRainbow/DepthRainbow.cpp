@@ -18,8 +18,14 @@ namespace Processors {
 namespace DepthRainbow {
 
 DepthRainbow::DepthRainbow(const std::string & name) :
-        Base::Component(name)
+        Base::Component(name),
+    fixed_range("override_range", false),
+    min_range("min_range", double(0.0)),
+    max_range("max_range", double(300.0))
 {
+    registerProperty(fixed_range);
+    registerProperty(min_range);
+    registerProperty(max_range);
 }
 
 DepthRainbow::~DepthRainbow() {
@@ -74,7 +80,11 @@ void DepthRainbow::convertMonoToRainbow() {
             depth.at<float>(y, x) = point[2];
         }
     }
-
+    if (fixed_range)
+    {
+        min_val = min_range;
+        max_val = max_range;
+    }
     depth.convertTo(depth_8bit, CV_8U);
     delta = (max_val - min_val) / DEPTH_RANGE;
     LOG(LDEBUG) << "Converting mono to rainbow";

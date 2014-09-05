@@ -28,7 +28,8 @@ StereoEstimator::StereoEstimator(const std::string & name) :
         speckleWindowSize("speckleWindowSize", int(100)),
         uniquenessRatio("uniquenessRatio", int(10)),
         textureThreshold("textureThreshold", int(10)),
-        algorythm_type("algorythm_type", STEREO_SGBM, "combo")
+        algorythm_type("algorythm_type", STEREO_SGBM, "combo"),
+        prop_rectify("perform_rectification", true)
 {
     bm = NULL;
     sgbm = NULL;
@@ -63,6 +64,7 @@ StereoEstimator::StereoEstimator(const std::string & name) :
     textureThreshold.addConstraint("0");
     textureThreshold.addConstraint("9999");
     registerProperty(textureThreshold);
+    registerProperty(prop_rectify);
 }
 
 StereoEstimator::~StereoEstimator() {
@@ -107,33 +109,40 @@ bool StereoEstimator::onStart() {
 
 void StereoEstimator::CalculateDepthMap() {
     CLOG(LINFO) << "StereoEstimator::CalculateDepthMap";
+    CLOG(LDEBUG) << "Get images from Data Streams";
     {
         if (l_in_img.fresh())
         {
-            CLOG(LINFO) << "Read fresh left image from Data Streams";
+            LOG(LINFO) << "Read fresh left image from Data Streams";
             in_left_image = l_in_img.read();
         }
         if (r_in_img.fresh())
         {
-            CLOG(LINFO) << "Read fresh right image from Data Streams";
+            LOG(LINFO) << "Read fresh right image from Data Streams";
             in_right_image = r_in_img.read();
         }
         if (l_in_cam_info.fresh())
         {
-            CLOG(LINFO) << "Read fresh left CameraInfo from Data Streams";
+            LOG(LINFO) << "Read fresh left CameraInfo from Data Streams";
             in_left_cam_info = l_in_cam_info.read();
         }
         if (r_in_cam_info.fresh())
         {
-            CLOG(LINFO) << "Read fresh right CameraInfo from Data Streams";
+            LOG(LINFO) << "Read fresh right CameraInfo from Data Streams";
             in_right_cam_info = r_in_cam_info.read();
         }
     }
-
+    //Source images
     cv::Mat& oLeftImage(in_left_image);
     cv::Mat& oRightImage(in_right_image);
+    //Rectified images
+    cv::Mat oLeftRectified;
+    cv::Mat oRightRectified;
+    //Camera information
     Types::CameraInfo& oLeftCamInfo(in_left_cam_info);
     Types::CameraInfo& oRightCamInfo(in_right_cam_info);
+
+    //Convert to monochrome if BM algorithm is chosen
     if( algorythm_type == STEREO_BM ){
     	cv::Mat LgreyMat, RgreyMat;
     	cv::cvtColor(oLeftImage, LgreyMat, CV_BGR2GRAY);
@@ -141,14 +150,15 @@ void StereoEstimator::CalculateDepthMap() {
     	oLeftImage=LgreyMat;
     	oRightImage=RgreyMat;
     }
+
 	try {
-    CLOG(LDEBUG) << "Get images from Data Streams";
 
 
     CLOG(LDEBUG) << "Create bunch of fresh cv::Mat objects";
+    //Region of intrest - valid rectified image space
     cv::Rect roi1, roi2;
     //Reprojection matix - Q
-    cv::Mat Q;
+    cv::Mat Q(cv::Mat::zeros(4,4, CV_64F));
     //Rectification and projection matrices - R* and P*
     cv::Mat R1, P1, R2, P2;
 
@@ -167,33 +177,38 @@ void StereoEstimator::CalculateDepthMap() {
     cv::Mat R = oRightCamInfo.rotationMatrix();
     cv::Mat T = oRightCamInfo.translationMatrix();
 
+    if(prop_rectify)
+    {
+        CLOG(LDEBUG) << "M1 "<< M1;
+        CLOG(LDEBUG) << "M2 "<< M2;
+        CLOG(LDEBUG) << "D1 "<< D1;
+        CLOG(LDEBUG) << "D2 "<< D2;
+        CLOG(LDEBUG) << "Size " << img_size.height << "x"<<img_size.width;
 
-    CLOG(LDEBUG) << "M1 "<< M1;
-    CLOG(LDEBUG) << "M2 "<< M2;
-    CLOG(LDEBUG) << "D1 "<< D1;
-    CLOG(LDEBUG) << "D2 "<< D2;
-    CLOG(LDEBUG) << "Size " << img_size.height << "x"<<img_size.width;
+        cv::stereoRectify( M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, -1, img_size, &roi1, &roi2 );
 
-    cv::stereoRectify( M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, -1, img_size, &roi1, &roi2 );
+        CLOG(LDEBUG) << "R1 "<< R1;
+        CLOG(LDEBUG) << "P1 "<< P1;
+        CLOG(LDEBUG) << "R2 "<< R2;
+        CLOG(LDEBUG) << "P2 "<< P2;
 
-    CLOG(LDEBUG) << "R1 "<< R1;
-    CLOG(LDEBUG) << "P1 "<< P1;
-    CLOG(LDEBUG) << "R2 "<< R2;
-    CLOG(LDEBUG) << "P2 "<< P2;
+        cv::Mat map11, map12, map21, map22;
 
-    cv::Mat map11, map12, map21, map22;
+        CLOG(LDEBUG) << "Calculate left transformation maps";
+        cv::initUndistortRectifyMap(M1, D1, R1, P1, img_size, CV_16SC2, map11, map12);
+        CLOG(LDEBUG) << "Calculate right transformation maps";
+        cv::initUndistortRectifyMap(M2, D2, R2, P2, img_size, CV_16SC2, map21, map22);
 
-    CLOG(LDEBUG) << "Calculate left transformation maps";
-    cv::initUndistortRectifyMap(M1, D1, R1, P1, img_size, CV_16SC2, map11, map12);
-    CLOG(LDEBUG) << "Calculate right transformation maps";
-    cv::initUndistortRectifyMap(M2, D2, R2, P2, img_size, CV_16SC2, map21, map22);
+        CLOG(LDEBUG) << "Rectification of images";
 
-    CLOG(LDEBUG) << "Rectification of images";
-	cv::Mat oLeftRectified;
-	cv::Mat oRightRectified;
-    cv::remap(oLeftImage, oLeftRectified, map11, map12, cv::INTER_LINEAR);
-    cv::remap(oRightImage, oRightRectified, map21, map22, cv::INTER_LINEAR);
-
+        cv::remap(oLeftImage, oLeftRectified, map11, map12, cv::INTER_LINEAR);
+        cv::remap(oRightImage, oRightRectified, map21, map22, cv::INTER_LINEAR);
+    } else
+    {
+        generateQ(M1,M2,T,Q);
+        oLeftRectified = oLeftImage;
+        oRightRectified = oRightImage;
+    }
     CLOG(LDEBUG) << "#ofDisparities: " << numberOfDisparities;
 
     numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : ((img_size.width/8) + 15) & -16;
@@ -248,9 +263,16 @@ void StereoEstimator::CalculateDepthMap() {
     cv::Rect roi2_copy(roi2);
     roi2_copy.x += minDisparity;
     cv::Rect mergedRoi = roi1 & roi2_copy;
-    out_depth_map.write(disp8(mergedRoi));
-    out_rgb_stereo.write(oLeftRectified(mergedRoi));
-    out_depth_xyz.write(xyz(mergedRoi));
+    if (prop_rectify)
+    {
+        out_depth_map.write(disp8(mergedRoi));
+        out_rgb_stereo.write(oLeftRectified(mergedRoi));
+        out_depth_xyz.write(xyz(mergedRoi));
+    } else {
+        out_depth_map.write(disp8);
+        out_rgb_stereo.write(oLeftRectified);
+        out_depth_xyz.write(xyz);
+    }
     } catch (...)
 	{
 		CLOG(LERROR) << "Error occured in processing input";
@@ -263,7 +285,7 @@ void StereoEstimator::generateQ(const cv::Mat& leftPMatrix, const cv::Mat& right
     double rCx = rightPMatrix.at<double>(0,2);
     double rCy = rightPMatrix.at<double>(1,2);
     double lCx = leftPMatrix.at<double>(0,2);
-    Q = cv::Mat(4,4, CV_64F);
+    Q = cv::Mat::zeros(4,4, CV_64F);
     Q.data[0,0] = 1.0;
     Q.data[1,1] = 1.0;
     Q.data[3,2] = -1.0 / Tx;
@@ -271,6 +293,27 @@ void StereoEstimator::generateQ(const cv::Mat& leftPMatrix, const cv::Mat& right
     Q.data[1,3] = -rCy;
     Q.data[2,3] = rFx;
     Q.data[3,3] = (rCx - lCx) / Tx;
+}
+
+void StereoEstimator::generateQ(const cv::Mat& leftCMatrix, const cv::Mat& rightCMatrix, const cv::Mat& translateMatrix, cv::Mat& Q) {
+    LOG(LINFO) << "Generating Q";
+    //LOG(LINFO) << "Left Camera" << leftCMatrix;
+    //LOG(LINFO) << "Right Camera" << rightCMatrix;
+    //LOG(LINFO) << "Translation" << translateMatrix;
+    double rFx = rightCMatrix.at<double>(0,0);
+    double Tx = translateMatrix.at<double>(0,0) / -rFx;
+    double rCx = rightCMatrix.at<double>(0,2);
+    double rCy = rightCMatrix.at<double>(1,2);
+    double lCx = leftCMatrix.at<double>(0,2);
+
+    Q.at<double>(0,0) = 1.0;
+    Q.at<double>(1,1) = 1.0;
+    Q.at<double>(3,2) = -1.0 / Tx;
+    Q.at<double>(0,3) = -rCx;
+    Q.at<double>(1,3) = -rCy;
+    Q.at<double>(2,3) = rFx;
+    Q.at<double>(3,3) = (rCx - lCx) / Tx;
+    LOG(LINFO) << "Q " << Q;
 }
 
 } //: namespace StereoEstimator
