@@ -80,6 +80,7 @@ protected:
      * Generate Q matrix for 2 projection matrices
      */
     void generateQ(const cv::Mat& leftPMatrix, const cv::Mat& rightPMatrix, cv::Mat& Q);
+    void generateQ(const cv::Mat& leftCMatrix, const cv::Mat& rightCMatrix, const cv::Mat& translateMatrix, cv::Mat& Q);
 
 	// Input data streams
     Base::DataStreamIn<cv::Mat, Base::DataStreamBuffer::Newest, Base::Synchronization::Mutex> l_in_img;
@@ -104,6 +105,7 @@ protected:
     Base::Property<int> speckleWindowSize;
     Base::Property<int> uniquenessRatio;
     Base::Property<int> textureThreshold;
+    Base::Property<bool> prop_rectify;
 
 
 	// Handlers
