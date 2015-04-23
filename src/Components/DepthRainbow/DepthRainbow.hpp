@@ -79,8 +79,9 @@ protected:
     Base::DataStreamOut<cv::Mat> out_depth_rainbow;
 
 	// Properties
-    // -- NONE --
-
+    Base::Property<bool> fixed_range;
+    Base::Property<double> min_range;
+    Base::Property<double> max_range;
 
 	// Handlers
     Base::EventHandler2 h_ConvertMonoToRainbow;
