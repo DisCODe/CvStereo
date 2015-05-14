@@ -1,8 +1,8 @@
-.cproject
+/build
+/build*
+/dist
+.settings
 .project
-build
-dist
-*.user
+.cproject
+/data/*/
 *~
-data/*/
-tmp/
