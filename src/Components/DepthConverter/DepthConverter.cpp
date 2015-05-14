@@ -27,15 +27,14 @@ DepthConventer::~DepthConventer() {
 
 void DepthConventer::prepareInterface() {
 	// Register data streams, events and event handlers HERE!
-    registerStream("in_rgb_stereo", &in_rgb_stereo);
-    registerStream("in_depth_xyz", &in_depth_xyz);
-    registerStream("out_cloud_xyzrgb", &out_cloud_xyzrgb);
+	registerStream("in_rgb_stereo", &in_rgb_stereo);
+	registerStream("in_depth_xyz", &in_depth_xyz);
+	registerStream("out_cloud_xyzrgb", &out_cloud_xyzrgb);
 
 	// Register handlers
-    h_CalculateDepthMap.setup(boost::bind(&DepthConventer::CalculateDepthMap, this));
-	registerHandler("CalculateDepthMap", &h_CalculateDepthMap);
-    addDependency("CalculateDepthMap", &in_rgb_stereo);
-    addDependency("CalculateDepthMap", &in_depth_xyz);
+	registerHandler("CalculateDepthMap", boost::bind(&DepthConventer::CalculateDepthMap, this));
+	addDependency("CalculateDepthMap", &in_rgb_stereo);
+	addDependency("CalculateDepthMap", &in_depth_xyz);
 }
 
 bool DepthConventer::onInit() {

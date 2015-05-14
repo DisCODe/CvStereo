@@ -40,8 +40,7 @@ void DepthTransform::prepareInterface() {
 	registerStream("out_image_xyz", &out_image_xyz);
 
 	// Register handlers
-	h_DepthTransformation.setup(boost::bind(&DepthTransform::DepthTransformation, this));
-	registerHandler("DepthTransformation", &h_DepthTransformation);
+	registerHandler("DepthTransformation", boost::bind(&DepthTransform::DepthTransformation, this));
 	addDependency("DepthTransformation", &in_image_xyz);
 	addDependency("DepthTransformation", &in_homogMatrix);
 

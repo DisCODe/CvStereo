@@ -96,9 +96,6 @@ protected:
 	//Base::Property<int> numberOfDisparities;
 
 	// Handlers
-	Base::EventHandler2 h_DepthTransformation;
-
-	// Handlers
 	void DepthTransformation();
 };
 

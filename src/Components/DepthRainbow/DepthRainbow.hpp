@@ -84,10 +84,6 @@ protected:
     Base::Property<double> max_range;
 
 	// Handlers
-    Base::EventHandler2 h_ConvertMonoToRainbow;
-
-	
-	// Handlers
     void convertMonoToRainbow();
 };
 

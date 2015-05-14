@@ -80,13 +80,8 @@ protected:
     Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > out_cloud_xyzrgb;
 
 	// Properties
-    // -- NONE --
+	// -- NONE --
 
-
-	// Handlers
-	Base::EventHandler2 h_CalculateDepthMap;
-
-	
 	// Handlers
 	void CalculateDepthMap();
 };

@@ -37,8 +37,7 @@ void DepthRainbow::prepareInterface() {
     registerStream("out_depth_rainbow", &out_depth_rainbow);
 
 	// Register handlers
-    h_ConvertMonoToRainbow.setup(boost::bind(&DepthRainbow::convertMonoToRainbow, this));
-    registerHandler("convertMonoToRainbow", &h_ConvertMonoToRainbow);
+    registerHandler("convertMonoToRainbow", boost::bind(&DepthRainbow::convertMonoToRainbow, this));
     addDependency("convertMonoToRainbow", &in_depth_xyz);
 }
 
