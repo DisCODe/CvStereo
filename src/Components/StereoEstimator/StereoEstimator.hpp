@@ -108,9 +108,6 @@ protected:
     Base::Property<bool> prop_rectify;
 
 
-	// Handlers
-	Base::EventHandler2 h_CalculateDepthMap;
-
 	cv::StereoSGBM* sgbm;
 	cv::StereoBM* bm;
 

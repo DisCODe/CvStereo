@@ -81,8 +81,8 @@ protected:
 
    
 	// Input data streams
-	Base::DataStreamIn <cv::Mat> in_image_xyz;
-	Base::DataStreamIn <Types::HomogMatrix> in_homogMatrix;
+	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_image_xyz;
+	Base::DataStreamIn <Types::HomogMatrix, Base::DataStreamBuffer::Newest> in_homogMatrix;
 
 
 	// Output data streams

@@ -83,8 +83,7 @@ void StereoEstimator::prepareInterface() {
     registerStream("out_depth_xyz", &out_depth_xyz);
 
 	// Register handlers
-    h_CalculateDepthMap.setup(boost::bind(&StereoEstimator::CalculateDepthMap, this));
-	registerHandler("CalculateDepthMap", &h_CalculateDepthMap);
+	registerHandler("CalculateDepthMap", boost::bind(&StereoEstimator::CalculateDepthMap, this));
 	addDependency("CalculateDepthMap", &l_in_img);
 	addDependency("CalculateDepthMap", &r_in_img);
 }

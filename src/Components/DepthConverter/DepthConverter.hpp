@@ -73,8 +73,8 @@ protected:
 	bool onStop();
 
 	// Input data streams
-    Base::DataStreamIn<cv::Mat> in_rgb_stereo;
-    Base::DataStreamIn<cv::Mat> in_depth_xyz;
+    Base::DataStreamIn<cv::Mat, Base::DataStreamBuffer::Newest> in_rgb_stereo;
+    Base::DataStreamIn<cv::Mat, Base::DataStreamBuffer::Newest> in_depth_xyz;
 
 	// Output data streams
     Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > out_cloud_xyzrgb;
