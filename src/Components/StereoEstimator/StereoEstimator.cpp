@@ -83,8 +83,7 @@ void StereoEstimator::prepareInterface() {
     registerStream("out_depth_xyz", &out_depth_xyz);
 
 	// Register handlers
-    h_CalculateDepthMap.setup(boost::bind(&StereoEstimator::CalculateDepthMap, this));
-	registerHandler("CalculateDepthMap", &h_CalculateDepthMap);
+	registerHandler("CalculateDepthMap", boost::bind(&StereoEstimator::CalculateDepthMap, this));
 	addDependency("CalculateDepthMap", &l_in_img);
 	addDependency("CalculateDepthMap", &r_in_img);
 }
@@ -229,9 +228,10 @@ void StereoEstimator::CalculateDepthMap() {
     int cn = oLeftImage.channels();
 
     sgbm->preFilterCap = preFilterCap;
-    sgbm->SADWindowSize = SADWindowSize;
-    sgbm->P1 = 8*cn*sgbm->SADWindowSize*sgbm->SADWindowSize;
-    sgbm->P2 = 32*cn*sgbm->SADWindowSize*sgbm->SADWindowSize;
+    int sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 3;
+    sgbm->SADWindowSize = sgbmWinSize;
+    sgbm->P1 = 8*cn*sgbmWinSize*sgbmWinSize;
+    sgbm->P2 = 32*cn*sgbmWinSize*sgbmWinSize;
     sgbm->minDisparity = minDisparity;
     sgbm->numberOfDisparities = numberOfDisparities;
     sgbm->uniquenessRatio = uniquenessRatio;
@@ -240,7 +240,7 @@ void StereoEstimator::CalculateDepthMap() {
     sgbm->disp12MaxDiff = disp12MaxDiff;
     sgbm->fullDP = ( algorythm_type == STEREO_HH );
 
-    cv::Mat disp, disp8;
+    cv::Mat disp, disp8, disp32f;
 
     CLOG(LDEBUG) << "Calculating disparity";
     int64 t = cv::getTickCount();
@@ -255,9 +255,11 @@ void StereoEstimator::CalculateDepthMap() {
     CLOG(LDEBUG) << "Converting disparity to depth image";
     disp.convertTo(disp8, CV_8U, 255/(numberOfDisparities*16.));
 
+    disp.convertTo(disp32f, CV_32F, 1./16);
+
     CLOG(LDEBUG) << "Generating depth point cloud";
     cv::Mat xyz;
-    reprojectImageTo3D(disp8, xyz, Q, true);
+    reprojectImageTo3D(disp32f, xyz, Q, true);
 
     CLOG(LDEBUG) << "Writing to data stream";
     cv::Rect roi2_copy(roi2);

@@ -23,13 +23,13 @@
 					<param name="sequence.directory">%[TASK_LOCATION]%/../data/stereo_bible_lr/</param>
 					<param name="sequence.pattern">left_.*\.png</param>
 					<param name="mode.loop">1</param>
-					<param name="mode.auto_trigger">0</param>						
+					<param name="mode.auto_next_image">0</param>						
 				</Component>
 				<Component name="SequenceRight" type="CvBasic:Sequence" priority="3" bump="0">
 					<param name="sequence.directory">%[TASK_LOCATION]%/../data/stereo_bible_lr/</param>
 					<param name="sequence.pattern">right_.*\.png</param>
 					<param name="mode.loop">1</param>
-					<param name="mode.auto_trigger">0</param>					
+					<param name="mode.auto_next_image">0</param>					
 				</Component>
 				<Component name="CameraInfoLeft" type="CvCoreTypes:CameraInfoProvider" priority="4" bump="0">
 					<param name="data_file">%[TASK_LOCATION]%/../data/velma-stereo/left.yml</param>
@@ -38,8 +38,8 @@
 					<param name="data_file">%[TASK_LOCATION]%/../data/velma-stereo/right.yml</param>
 				</Component>
 				<Component name="StereoEstimator" type="CvStereo:StereoEstimator" priority="6" bump="0">
-					<param name="minDisparity">160</param>
-					<param name="numberOfDisparities">320</param>
+					<param name="minDisparity">340</param>
+					<param name="numberOfDisparities">432</param>
 					<param name="uniquenessRatio">25</param>
 				</Component>
 				<Component name="DepthConventer" type="CvStereo:DepthConventer" priority="7" bump="0">
@@ -62,8 +62,8 @@
 	<!-- pipes connecting datastreams -->
 	<DataStreams>
 		<Source name="NextImageTrigger.out_trigger">
-			<sink>SequenceLeft.in_trigger</sink>
-			<sink>SequenceRight.in_trigger</sink>
+			<sink>SequenceLeft.in_next_image_trigger</sink>
+			<sink>SequenceRight.in_next_image_trigger</sink>
 		</Source>
 		<Source name="SequenceLeft.out_img">
 			<sink>StereoEstimator.l_in_img</sink>
