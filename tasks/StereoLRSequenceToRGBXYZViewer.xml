@@ -48,7 +48,7 @@
 
 			<Executor name="WriterExec" period="1">
 				<Component name="ImageWriter" type="CvBasic:ImageWriter" priority="1" bump="0">
-					<param name="directory">%[TASK_LOCATION]%/../data/velma-stereo-2015.05/</param>
+					<param name="directory">%[TASK_LOCATION]%/../data/velma-stereo/</param>
 					<param name="count">2</param>
 					<param name="digits">1</param>
 					<param name="base_name">rgb,xyz</param>
