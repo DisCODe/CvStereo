@@ -184,7 +184,7 @@ void StereoEstimator::CalculateDepthMap() {
         CLOG(LDEBUG) << "D2 "<< D2;
         CLOG(LDEBUG) << "Size " << img_size.height << "x"<<img_size.width;
 
-        cv::stereoRectify( M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, 0, img_size, &roi1, &roi2 );
+        cv::stereoRectify( M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, 0, 0, img_size, &roi1, &roi2 );
 
         CLOG(LDEBUG) << "R1 "<< R1;
         CLOG(LDEBUG) << "P1 "<< P1;
