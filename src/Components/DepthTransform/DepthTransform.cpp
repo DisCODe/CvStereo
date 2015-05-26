@@ -21,10 +21,10 @@ namespace DepthTransform {
 using Types::HomogMatrix;
 
 DepthTransform::DepthTransform(const std::string & name) :
-		Base::Component(name)
+	Base::Component(name),
+	prop_inverse("inverse", false)
 {
-
-
+    registerProperty(prop_inverse);
 
 }
 
@@ -66,103 +66,111 @@ bool DepthTransform::onStart() {
 void DepthTransform::DepthTransformation() {
 	try{
 	  
-	  
-	
-	  
-	  cv::Mat depth_image = in_image_xyz.read();
-	  HomogMatrix hm = in_homogMatrix.read();
-	  
-	  stringstream ss;
-	for (int i = 0; i < 3; ++i) {
-		for (int j = 0; j < 4; ++j) {
-            ss << hm.getElement(i, j) << "  ";
-		}
+	cv::Mat img = in_image_xyz.read();
+	HomogMatrix tmp_hm = in_homogMatrix.read();
+	HomogMatrix hm;
+
+	CLOG(LERROR) << "HomogMatrix:\n" << tmp_hm;
+
+	// Check inversion property.
+	if (prop_inverse){
+		hm.matrix() = tmp_hm.matrix().inverse();
 	}
-	CLOG(LINFO) << "HomogMatrix:\n" << ss.str() << endl;
-	  
-	  
-	  
-	  cv::Size depth_size = depth_image.size();
+	else
+		hm = tmp_hm;
 
-	  cv::Mat_<double> rotationMatrix(3,3);
-	  cv::Mat_<double> tvec(3,1);	  
-	  
-	  cv::Mat tmp_img;// = cv::Mat(depth_image);
-	  tmp_img.create(depth_size, CV_32FC3);
-	    
-            float newX, newY, newZ;
-            depth_size.width *= 3;
-	    
-	    
-        rotationMatrix.at<double>(0,0)=hm.getElement(0, 0);
-        rotationMatrix.at<double>(0,1)=hm.getElement(0, 1);
-        rotationMatrix.at<double>(0,2)=hm.getElement(0, 2);
-	    
-        rotationMatrix.at<double>(1,0) = hm.getElement(1, 0);
-        rotationMatrix.at<double>(1,1) = hm.getElement(1, 1);
-        rotationMatrix.at<double>(1,2) = hm.getElement(1, 2);
-	    
-        rotationMatrix.at<double>(2,0)=hm.getElement(2, 0);
-        rotationMatrix.at<double>(2,1)=hm.getElement(2, 1);
-        rotationMatrix.at<double>(2,2)=hm.getElement(2, 2);
-	   
-        tvec.at<double>(0,0) = hm.getElement(0, 3);
-        tvec.at<double>(1,0) = hm.getElement(1, 3);
-        tvec.at<double>(2,0) = hm.getElement(2, 3);
-	    
-	    LOG(LINFO)<< " rotationMatrix " << rotationMatrix;
-	    
-        LOG(LINFO)<<"hm" <<hm.getElement(3, 0) << hm.getElement(3, 1)<<hm.getElement(3, 2);
+	// Temporary point.
+	Eigen::Vector4d pt;
 
-	   
-	    LOG(LINFO)<< " tvec " << tvec;
-	   
-	    rotationMatrix=rotationMatrix.t();
-	    
+	CLOG(LINFO) << "HomogMatrix:\n" << hm;
 
-	//LOG(LINFO) << "DepthTransformation\n";
-        for (int i = 0; i < depth_size.height; i++)
-        {
-	  
-            const float* depth_ptr = depth_image.ptr <float> (i);
-	    float* depth_ptr_tmp = tmp_img.ptr <float> (i);
-            int j, k = 0;
-	    int val = 0;
-	   
-            for (j = 0; j < depth_size.width; j += 3)
-            {
-	      
-		 // get x, y, z from depth_image
-		 float x = depth_ptr[j];
-                 float y = depth_ptr[j + 1];
-		 float z= depth_ptr[j + 2];
-		 
-		  if(z==10000)
-		  {
-		      depth_ptr_tmp[j]=x;
-		      depth_ptr_tmp[j + 1]=y;
-		      depth_ptr_tmp[j + 2]=z;
-		      continue;
-		  }
+	// check, if image has proper number of channels
+	if (img.channels() != 3) {
+		CLOG(LERROR) << "DepthTransformation: Wrong number of channels";
+		return;
+	}
+	
+	// check image depth, allowed is only 32F and 64F
+	int img_type = img.depth();
+	if ( (img_type != CV_32F) && (img_type != CV_64F) ) {
+		CLOG(LERROR) << "DepthTransformation: Wrong depth";
+		return;
+	}
+	
+	// clone image - operation will change its contents
+	img = img.clone();
+	
+	// Check size.	
+	int rows = img.rows;
+	int cols = img.cols;
+	
+	if (img.isContinuous()) {
+		cols *= rows;
+		rows = 1;
+	}
+	
+	// float variant
+	if (img_type == CV_32F) {
+		CLOG(LINFO) << "Transflorming CV_32F";
+		int i,j;
+		float* p;
+
+		// iterate through all image pixels
+		for( i = 0; i < rows; ++i) {
+
+			p = img.ptr<float>(i);
+			for ( j = 0; j < cols; ++j) {
+				// Filter invalid numbers.
+				if(p[3*j + 2] > 300)
+					continue;
+
+				// read point coordinates 
+				pt(0) = p[3*j];
+				pt(1) = p[3*j + 1];
+				pt(2) = p[3*j + 2];
+				pt(3) = 1;
+
+				// transform point
+				pt = hm * pt;
+
+				// write back result
+				p[3*j]   = pt(0);
+				p[3*j+1] = pt(1);
+				p[3*j+2] = pt(2);
+				
+			}//: for
+		}//: for
 		
-		x=x-tvec.at<double>(0,0);
-		y=y-tvec.at<double>(1,0);
-		z=z-tvec.at<double>(2,0);
+	} else { // double variant
+		CLOG(LINFO) << "Transflorming CV_64F";
+		int i,j;
+		double* p;
+		for( i = 0; i < rows; ++i) {
+			p = img.ptr<double>(i);
+			for ( j = 0; j < cols; ++j) {
+				// Filter invalid numbers.
+				if(p[3*j + 2] > 300)
+					continue;
 
-      		newX = x*rotationMatrix.at<double>(0,0) + y*rotationMatrix.at<double>(0,1)+z*rotationMatrix.at<double>(0,2);
-		newY = x*rotationMatrix.at<double>(1,0) + y*rotationMatrix.at<double>(1,1)+z*rotationMatrix.at<double>(1,2);
-		newZ = x*rotationMatrix.at<double>(2,0) + y*rotationMatrix.at<double>(2,1)+z*rotationMatrix.at<double>(2,2);
+				// read point coordinates 
+				pt(0) = p[3*j];
+				pt(1) = p[3*j + 1];
+				pt(2) = p[3*j + 2];
+				pt(3) = 1;
 
-		depth_ptr_tmp[j]=newX;
-                depth_ptr_tmp[j + 1]=newY;
-                depth_ptr_tmp[j + 2]=newZ;
-		
-            }
-        }
-       
-	  LOG(LINFO) << "Writing to data stream";
-	  out_image_xyz.write(tmp_img);
-	  
+				// transform point
+				pt = hm * pt;
+
+				// write back result
+				p[3*j]   = pt(0);
+				p[3*j+1] = pt(1);
+				p[3*j+2] = pt(2);
+			}//: for
+		}//: for
+	}//: else
+	
+	out_image_xyz.write(img);
+
 	} catch (...)
 	{
 		LOG(LERROR) << "DepthTransformation:Error occured in processing input";

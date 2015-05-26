@@ -92,8 +92,7 @@ protected:
 
 
 	// Properties
-	//Base::Property<string> algorythm_type;
-	//Base::Property<int> numberOfDisparities;
+	Base::Property<bool> prop_inverse;
 
 	// Handlers
 	void DepthTransformation();
