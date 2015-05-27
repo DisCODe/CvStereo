@@ -70,7 +70,7 @@ void DepthTransform::DepthTransformation() {
 	HomogMatrix tmp_hm = in_homogMatrix.read();
 	HomogMatrix hm;
 
-	CLOG(LERROR) << "HomogMatrix:\n" << tmp_hm;
+	CLOG(LDEBUG) << "Input homogenous matrix:\n" << tmp_hm;
 
 	// Check inversion property.
 	if (prop_inverse){
@@ -82,7 +82,7 @@ void DepthTransform::DepthTransformation() {
 	// Temporary point.
 	Eigen::Vector4d pt;
 
-	CLOG(LINFO) << "HomogMatrix:\n" << hm;
+	CLOG(LINFO) << "Using homogenous matrix:\n" << hm;
 
 	// check, if image has proper number of channels
 	if (img.channels() != 3) {
