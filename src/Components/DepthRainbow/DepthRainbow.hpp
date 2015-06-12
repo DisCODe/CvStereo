@@ -50,6 +50,12 @@ public:
 	 */
 	void prepareInterface();
 
+	/// Maximals sensor range (in meters).
+	static const unsigned short DEPTH_RANGE = 1536;
+
+	/// Value denoting "not a number".
+	static const unsigned short NAN_VALUE = 10000;
+
 protected:
 
 	/*!
@@ -85,6 +91,8 @@ protected:
 
 	// Handlers
     void convertMonoToRainbow();
+
+
 };
 
 } //: namespace DepthRainbow

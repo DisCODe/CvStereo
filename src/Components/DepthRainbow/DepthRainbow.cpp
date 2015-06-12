@@ -60,8 +60,6 @@ bool DepthRainbow::onStart() {
 typedef struct{uchar r; uchar g; uchar b;} color;
 
 void DepthRainbow::convertMonoToRainbow() {
-    unsigned short DEPTH_RANGE = 1536;
-    unsigned short NAN_VALUE = 10000;
 
     cv::Mat data(in_depth_xyz.read());
     cv::Mat depth;
@@ -86,7 +84,7 @@ void DepthRainbow::convertMonoToRainbow() {
     }
     depth.convertTo(depth_8bit, CV_8U);
     delta = (max_val - min_val) / DEPTH_RANGE;
-    LOG(LDEBUG) << "Converting mono to rainbow";
+    CLOG(LDEBUG) << "Converting mono to rainbow";
     try {
         out.create(data.size(), CV_8UC3);
         for (int y = 0; y < out.rows; y++) {
@@ -142,11 +140,11 @@ void DepthRainbow::convertMonoToRainbow() {
                 out.at<color>(y, x) = col;
             }
         }
-        LOG(LINFO) << "Z coord: Min value = " << min_val << ", Max value = " << max_val;
+        CLOG(LINFO) << "Z coord: Min value = " << min_val << ", Max value = " << max_val;
         out_depth_rainbow.write(out);
 	} catch (...)
 	{
-		LOG(LERROR) << "Error occured in processing input";
+		CLOG(LERROR) << "Error occured in processing input";
 	}
 }
 

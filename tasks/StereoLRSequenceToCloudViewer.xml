@@ -21,15 +21,15 @@
 				</Component>
 				<Component name="SequenceLeft" type="CvBasic:Sequence" priority="2" bump="0">
 <!--					<param name="sequence.directory">%[TASK_LOCATION]%/../data/velma-stereo-2015.05/Widok1/</param>-->
-					<param name="sequence.directory">/home/tkornuta/discode_ecovi/DCL/Registration/data/2015-05-21/lejek/</param>
-					<param name="sequence.pattern">Window1_.*\.png</param>
+					<param name="sequence.directory">/home/tkornuta/discode_ecovi/DCL/Registration/data/2015-06-11/lego_1/</param>
+					<param name="sequence.pattern">.*_left\.png</param>
 					<param name="mode.loop">1</param>
 					<param name="mode.auto_next_image">0</param>						
 				</Component>
 				<Component name="SequenceRight" type="CvBasic:Sequence" priority="3" bump="0">
 <!--					<param name="sequence.directory">%[TASK_LOCATION]%/../data/velma-stereo-2015.05/Widok1/</param>-->
-					<param name="sequence.directory">/home/tkornuta/discode_ecovi/DCL/Registration/data/2015-05-21/lejek/</param>
-					<param name="sequence.pattern">Window0_.*\.png</param>
+					<param name="sequence.directory">/home/tkornuta/discode_ecovi/DCL/Registration/data/2015-06-11/lego_1/</param>
+					<param name="sequence.pattern">.*_right\.png</param>
 					<param name="mode.loop">1</param>
 					<param name="mode.auto_next_image">0</param>					
 				</Component>
