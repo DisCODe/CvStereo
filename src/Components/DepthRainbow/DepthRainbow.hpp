@@ -7,19 +7,17 @@
 #ifndef DEPTHRAINBOW_HPP_
 #define DEPTHRAINBOW_HPP_
 
-#include "Component_Aux.hpp"
-#include "Component.hpp"
-#include "DataStream.hpp"
-#include "Property.hpp"
-#include "EventHandler2.hpp"
+#include "Base/Component_Aux.hpp"
+#include "Base/Component.hpp"
+#include "Base/DataStream.hpp"
+#include "Base/Property.hpp"
+#include "Base/EventHandler2.hpp"
 
 #include <Types/CameraInfo.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
 
 namespace Processors {
 namespace DepthRainbow {
@@ -80,6 +78,7 @@ protected:
 
 	// Input data streams
     Base::DataStreamIn<cv::Mat> in_depth_xyz;
+    Base::DataStreamIn<cv::Mat> in_disparity;
 
 	// Output data streams
     Base::DataStreamOut<cv::Mat> out_depth_rainbow;
@@ -91,6 +90,7 @@ protected:
 
 	// Handlers
     void convertMonoToRainbow();
+    void convertDisparityToRainbow();
 
 
 };

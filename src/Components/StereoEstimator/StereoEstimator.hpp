@@ -7,26 +7,24 @@
 #ifndef STEREOESTIMATOR_HPP_
 #define STEREOESTIMATOR_HPP_
 
-#include "Component_Aux.hpp"
-#include "Component.hpp"
-#include "DataStream.hpp"
-#include "Property.hpp"
-#include "EventHandler2.hpp"
+#include "Base/Component_Aux.hpp"
+#include "Base/Component.hpp"
+#include "Base/DataStream.hpp"
+#include "Base/Property.hpp"
+#include "Base/EventHandler2.hpp"
 
 #include <Types/CameraInfo.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
 
 namespace Processors {
 namespace StereoEstimator {
 
-static const string STEREO_BM = "STEREO_BM";
-static const string STEREO_SGBM = "STEREO_SGBM";
-static const string STEREO_HH = "STEREO_HH";
+static const std::string STEREO_BM = "STEREO_BM";
+static const std::string STEREO_SGBM = "STEREO_SGBM";
+static const std::string STEREO_HH = "STEREO_HH";
 //static const string STEREO_VAR = "STEREO_VAR";
 
 /*!
@@ -92,10 +90,12 @@ protected:
     Base::DataStreamOut<cv::Mat> out_rgb_stereo;
 	Base::DataStreamOut<cv::Mat> out_depth_map;
     Base::DataStreamOut<cv::Mat> out_depth_xyz;
+    Base::DataStreamOut<cv::Mat> out_disparity;
+    Base::DataStreamOut<cv::Mat> out_mask;
 
 
 	// Properties
-	Base::Property<string> algorythm_type;
+	Base::Property<std::string> algorythm_type;
     Base::Property<int> numberOfDisparities;
     Base::Property<int> SADWindowSize;
     Base::Property<int> preFilterCap;
@@ -108,8 +108,8 @@ protected:
     Base::Property<bool> prop_rectify;
 
 
-	cv::StereoSGBM* sgbm;
-	cv::StereoBM* bm;
+	cv::Ptr<cv::StereoSGBM> sgbm;
+	cv::Ptr<cv::StereoBM> bm;
 
     cv::Mat in_left_image;
     cv::Mat in_right_image;

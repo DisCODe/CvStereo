@@ -16,7 +16,7 @@
 
 namespace Processors {
 namespace DepthRainbow {
-
+ 
 DepthRainbow::DepthRainbow(const std::string & name) :
         Base::Component(name),
     fixed_range("fixed_range", false),
@@ -34,11 +34,15 @@ DepthRainbow::~DepthRainbow() {
 void DepthRainbow::prepareInterface() {
 	// Register data streams, events and event handlers HERE!
     registerStream("in_depth_xyz", &in_depth_xyz);
+    registerStream("in_disparity", &in_disparity);
     registerStream("out_depth_rainbow", &out_depth_rainbow);
 
 	// Register handlers
     registerHandler("convertMonoToRainbow", boost::bind(&DepthRainbow::convertMonoToRainbow, this));
     addDependency("convertMonoToRainbow", &in_depth_xyz);
+    
+    registerHandler("convertDisparityToRainbow", boost::bind(&DepthRainbow::convertDisparityToRainbow, this));
+    addDependency("convertDisparityToRainbow", &in_disparity);
 }
 
 bool DepthRainbow::onInit() {
@@ -57,7 +61,97 @@ bool DepthRainbow::onStart() {
 	return true;
 }
 
-typedef struct{uchar r; uchar g; uchar b;} color;
+typedef struct{uchar b; uchar g; uchar r;} color;
+
+color hsv2rgb(float hue, float sat, float val) {
+	float red, grn, blu;
+	float i, f, p, q, t;
+	color result;
+	 
+	if(val==0) {
+	red = 0;
+	grn = 0;
+	blu = 0;
+	} else {
+	hue/=60;
+	i = floor(hue);
+	f = hue-i;
+	p = val*(1-sat);
+	q = val*(1-(sat*f));
+	t = val*(1-(sat*(1-f)));
+	if (i==0) {red=val; grn=t; blu=p;}
+	else if (i==1) {red=q; grn=val; blu=p;}
+	else if (i==2) {red=p; grn=val; blu=t;}
+	else if (i==3) {red=p; grn=q; blu=val;}
+	else if (i==4) {red=t; grn=p; blu=val;}
+	else if (i==5) {red=val; grn=p; blu=q;}
+	}
+	result.r = red * 255;
+	result.g = grn * 255;
+	result.b = blu * 255;
+	return result;
+}
+
+double interpolate( double val, double y0, double x0, double y1, double x1 ) {
+    return (val-x0)*(y1-y0)/(x1-x0) + y0;
+}
+
+double base( double val ) {
+    if ( val <= -0.75 ) return 0;
+    else if ( val <= -0.25 ) return interpolate( val, 0.0, -0.75, 1.0, -0.25 );
+    else if ( val <= 0.25 ) return 1.0;
+    else if ( val <= 0.75 ) return interpolate( val, 1.0, 0.25, 0.0, 0.75 );
+    else return 0.0;
+}
+
+double red( double gray ) {
+    return base( gray - 0.5 );
+}
+double green( double gray ) {
+    return base( gray );
+}
+double blue( double gray ) {
+    return base( gray + 0.5 );
+}
+
+void DepthRainbow::convertDisparityToRainbow() {
+    cv::Mat data(in_disparity.read());
+        
+	cv::Mat out;
+    double min, max;
+	if (fixed_range) {
+        min = min_range;
+        max = max_range;
+    } else {
+        cv::minMaxLoc(data, &min, &max);
+    }
+    
+	out.create(data.size(), CV_8UC3);
+	for (int y = 0; y < out.rows; y++) {
+		for (int x = 0; x < out.cols; x++) {
+			color col;
+			col.r = col.g = col.b = 0;
+			float curDisp = data.at<float>(y, x);
+			
+			if (curDisp < min+0.1) {
+				col.r=col.g=col.b = 0;
+			} else {
+				double h = (curDisp-min)/(max-min);
+				if (h < 0) h = 0;
+				if (h > 1) h = 1;
+				//col = hsv2rgb(h*300, 1, 1);
+                h = h * 2 - 1;
+                col.r = red(h) * 255;
+                col.g = green(h) * 255;
+                col.b = blue(h) * 255;
+                //col.r = col.g = col.b = 255 * h;
+			}
+			out.at<color>(y, x) = col;
+		}
+	}
+    
+    out_depth_rainbow.write(out);
+}
 
 void DepthRainbow::convertMonoToRainbow() {
 

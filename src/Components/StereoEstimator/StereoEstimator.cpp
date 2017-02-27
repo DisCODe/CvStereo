@@ -31,8 +31,8 @@ StereoEstimator::StereoEstimator(const std::string & name) :
         algorythm_type("algorythm_type", STEREO_SGBM, "combo"),
         prop_rectify("perform_rectification", true)
 {
-    bm = NULL;
-    sgbm = NULL;
+    //bm = NULL;
+    //sgbm = NULL;
     algorythm_type.addConstraint(STEREO_BM);
     algorythm_type.addConstraint(STEREO_SGBM);
     algorythm_type.addConstraint(STEREO_HH);
@@ -68,8 +68,8 @@ StereoEstimator::StereoEstimator(const std::string & name) :
 }
 
 StereoEstimator::~StereoEstimator() {
-	if (sgbm != 0 ) delete sgbm;
-	if (bm != 0 ) delete bm;
+	//if (sgbm != 0 ) delete sgbm;
+	//if (bm != 0 ) delete bm;
 }
 
 void StereoEstimator::prepareInterface() {
@@ -81,6 +81,8 @@ void StereoEstimator::prepareInterface() {
     registerStream("out_rgb_stereo", &out_rgb_stereo);
     registerStream("out_depth_map", &out_depth_map);
     registerStream("out_depth_xyz", &out_depth_xyz);
+    registerStream("out_disparity", &out_disparity);
+    registerStream("out_mask", &out_mask);
 
 	// Register handlers
 	registerHandler("CalculateDepthMap", boost::bind(&StereoEstimator::CalculateDepthMap, this));
@@ -89,8 +91,8 @@ void StereoEstimator::prepareInterface() {
 }
 
 bool StereoEstimator::onInit() {
-    sgbm = new cv::StereoSGBM();
-    bm = new cv::StereoBM();
+//    sgbm = cv::StereoSGBM::create();
+    //bm = cv::StereoBM::create();
 	return true;
 }
 
@@ -98,7 +100,7 @@ bool StereoEstimator::onFinish() {
 	return true;
 }
 
-bool StereoEstimator::onStop() {
+bool StereoEstimator::onStop() { 
 	return true;
 }
 
@@ -212,7 +214,8 @@ void StereoEstimator::CalculateDepthMap() {
 
     numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : ((img_size.width/8) + 15) & -16;
 
-    bm->state->roi1 = roi1;
+    bm = cv::StereoBM::create(numberOfDisparities, SADWindowSize);
+    /*bm->state->roi1 = roi1;
     bm->state->roi2 = roi2;
     bm->state->preFilterCap = preFilterCap;
     bm->state->SADWindowSize = SADWindowSize;
@@ -222,13 +225,24 @@ void StereoEstimator::CalculateDepthMap() {
     bm->state->uniquenessRatio = uniquenessRatio;
     bm->state->speckleWindowSize = speckleWindowSize;
     bm->state->speckleRange = speckleRange;
-    bm->state->disp12MaxDiff = disp12MaxDiff;
+    bm->state->disp12MaxDiff = disp12MaxDiff;*/
 
 
     int cn = oLeftImage.channels();
 
-    sgbm->preFilterCap = preFilterCap;
     int sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 3;
+    int sgbm_mode = cv::StereoSGBM::MODE_SGBM;
+    if (algorythm_type == STEREO_SGBM)
+        sgbm_mode = cv::StereoSGBM::MODE_SGBM;
+    if (algorythm_type == STEREO_HH)
+        sgbm_mode = cv::StereoSGBM::MODE_HH;
+    
+    sgbm = cv::StereoSGBM::create(minDisparity, numberOfDisparities, sgbmWinSize, 
+        8*cn*sgbmWinSize*sgbmWinSize, 32*cn*sgbmWinSize*sgbmWinSize, 
+        disp12MaxDiff, preFilterCap, uniquenessRatio, 
+        speckleWindowSize, speckleRange, sgbm_mode);
+
+    /*sgbm->preFilterCap = preFilterCap;
     sgbm->SADWindowSize = sgbmWinSize;
     sgbm->P1 = 8*cn*sgbmWinSize*sgbmWinSize;
     sgbm->P2 = 32*cn*sgbmWinSize*sgbmWinSize;
@@ -238,16 +252,16 @@ void StereoEstimator::CalculateDepthMap() {
     sgbm->speckleWindowSize = speckleWindowSize;
     sgbm->speckleRange = speckleRange;
     sgbm->disp12MaxDiff = disp12MaxDiff;
-    sgbm->fullDP = ( algorythm_type == STEREO_HH );
+    sgbm->fullDP = ( algorythm_type == STEREO_HH );*/
 
     cv::Mat disp, disp8, disp32f;
 
     CLOG(LDEBUG) << "Calculating disparity";
     int64 t = cv::getTickCount();
     if( algorythm_type == STEREO_BM )
-        bm->operator ()(oLeftRectified, oRightRectified, disp);
+        bm->compute(oLeftRectified, oRightRectified, disp);
     else if( algorythm_type == STEREO_SGBM || algorythm_type == STEREO_HH )
-        sgbm->operator ()(oLeftRectified, oRightRectified, disp);
+        sgbm->compute(oLeftRectified, oRightRectified, disp);
     t = cv::getTickCount() - t;
     float time = t * 1000/cv::getTickFrequency();
     CLOG(LINFO) << boost::format("Calculating disparity : Time elapsed: %1%ms") % time;
@@ -265,16 +279,19 @@ void StereoEstimator::CalculateDepthMap() {
     cv::Rect roi2_copy(roi2);
     roi2_copy.x += minDisparity;
     cv::Rect mergedRoi = roi1 & roi2_copy;
-    if (prop_rectify)
+    cv::Mat mask = (disp32f != minDisparity-1);
+/*    if (prop_rectify)
     {
         out_depth_map.write(disp8);
         out_rgb_stereo.write(oLeftRectified);
         out_depth_xyz.write(xyz);
-    } else {
+    } else {*/
         out_depth_map.write(disp8);
         out_rgb_stereo.write(oLeftRectified);
         out_depth_xyz.write(xyz);
-    }
+        out_disparity.write(disp32f);
+        out_mask.write(mask);
+    //}
     } catch (...)
 	{
 		CLOG(LERROR) << "Error occured in processing input";
@@ -299,9 +316,9 @@ void StereoEstimator::generateQ(const cv::Mat& leftPMatrix, const cv::Mat& right
 
 void StereoEstimator::generateQ(const cv::Mat& leftCMatrix, const cv::Mat& rightCMatrix, const cv::Mat& translateMatrix, cv::Mat& Q) {
     LOG(LINFO) << "Generating Q";
-    //LOG(LINFO) << "Left Camera" << leftCMatrix;
-    //LOG(LINFO) << "Right Camera" << rightCMatrix;
-    //LOG(LINFO) << "Translation" << translateMatrix;
+    LOG(LINFO) << "Left Camera" << leftCMatrix;
+    LOG(LINFO) << "Right Camera" << rightCMatrix;
+    LOG(LINFO) << "Translation" << translateMatrix;
     double rFx = rightCMatrix.at<double>(0,0);
     double Tx = translateMatrix.at<double>(0,0) / -rFx;
     double rCx = rightCMatrix.at<double>(0,2);
