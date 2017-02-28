@@ -16,18 +16,18 @@
 	<!-- task definition -->
 	<Subtasks>
 		<Subtask name="Processing">
-			<Executor name="ExecDisp" period="2">
+			<Executor name="ExecDisp" period="0.2">
 				<Component name="NextImageTrigger" type="CvBasic:Trigger" priority="1" bump="0">
 				</Component>
 				<Component name="SequenceLeft" type="CvBasic:Sequence" priority="2" bump="0">
 					<param name="sequence.directory">%[TASK_LOCATION]%/../data/Newkuba/</param>
-					<param name="sequence.pattern">left_.*\.png</param>
+					<param name="sequence.pattern">left_1.*\.png</param>
 					<param name="mode.loop">1</param>
 					<param name="mode.auto_trigger">0</param>						
 				</Component>
 				<Component name="SequenceRight" type="CvBasic:Sequence" priority="3" bump="0">
 					<param name="sequence.directory">%[TASK_LOCATION]%/../data/Newkuba/</param>
-					<param name="sequence.pattern">right_.*\.png</param>
+					<param name="sequence.pattern">right_1.*\.png</param>
 					<param name="mode.loop">1</param>
 					<param name="mode.auto_trigger">0</param>					
 				</Component>

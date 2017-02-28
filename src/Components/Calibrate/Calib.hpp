@@ -66,11 +66,13 @@ protected:
 	bool onStop();
 
 	// Data streams
-	Base::DataStreamIn<Types::Objects3D::Object3D, Base::DataStreamBuffer::Newest> in_object3D;
+	Base::DataStreamIn<Types::Objects3D::Object3D, Base::DataStreamBuffer::Newest> in_object3D_left;
+	Base::DataStreamIn<Types::Objects3D::Object3D, Base::DataStreamBuffer::Newest> in_object3D_right;
 
 	Base::DataStreamIn< Types::CameraInfo > in_camerainfo;
 
-	Base::DataStreamOut< Types::CameraInfo > out_camerainfo;
+	Base::DataStreamOut< Types::CameraInfo > out_camerainfo_left;
+	Base::DataStreamOut< Types::CameraInfo > out_camerainfo_right;
 
 	// Adds received chessboard observation to calibration set.
 	void process_object3D();
@@ -87,13 +89,18 @@ protected:
 
 	// Working mode: if activated, memorizes every data set that is received.
 	Base::Property<bool> continuous;
+	
+	// Perform two-stepcalibration
+	Base::Property<bool> two_step;
 
 private:
    // The vector of vectors of the object point projections on the calibration pattern views, one vector per a view.
-	std::vector<std::vector<cv::Point2f> > imagePoints;
+	std::vector<std::vector<cv::Point2f> > imagePoints_left;
+	std::vector<std::vector<cv::Point2f> > imagePoints_right;
 
 	// The vector of vectors of points on the calibration pattern in its coordinate system, one vector per view.
-	std::vector<std::vector<cv::Point3f> > objectPoints;
+	std::vector<std::vector<cv::Point3f> > objectPoints_left;
+	std::vector<std::vector<cv::Point3f> > objectPoints_right;
 
 	cv::Size imageSize;
 

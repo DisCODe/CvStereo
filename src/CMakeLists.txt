@@ -21,6 +21,7 @@ FIND_PACKAGE(OpenCV REQUIRED)
 # Find another DCLs our one depends on
 # Use macro: DISCODE_FIND_DCL(<DCL_NAME>)
 DISCODE_FIND_DCL(CvCoreTypes)
+DISCODE_FIND_DCL(CvBasic)
 
 # Add standard libraries for this DCL: Boost & PCL
 MESSAGE(STATUS "${PCL_LIBRARIES}")
