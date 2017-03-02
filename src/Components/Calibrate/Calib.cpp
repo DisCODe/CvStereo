@@ -155,6 +155,7 @@ void Calib::perform_calibration()
 			LOG(LNOTICE) << "Camera matrix (R): " << cameraMatrix_right;
 			LOG(LNOTICE) << "Distortion coefficients (L): " << distCoeffs_left;
 			LOG(LNOTICE) << "Distortion coefficients (R): " << distCoeffs_right;
+			LOG(LNOTICE) << "Image size: " << imageSize;
 			
 			Types::CameraInfo camera_info_left;
 			camera_info_left.setSize(imageSize);
