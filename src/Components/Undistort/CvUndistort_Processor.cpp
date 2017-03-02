@@ -20,9 +20,11 @@ using namespace Base;
 
 CvUndistort_Processor::CvUndistort_Processor(const std::string& n) :
 	Component(n),
-	alpha("alpha", 0, "range")
+	alpha("alpha", 0, "range"),
+	pass_through("pass_through", false)
 {
 	registerProperty(alpha);
+	registerProperty(pass_through);
 }
 
 CvUndistort_Processor::~CvUndistort_Processor()
@@ -77,6 +79,12 @@ void CvUndistort_Processor::onNewImage()
 	Types::CameraInfo ci_left = in_camera_info_left.read();
 	cv::Mat img_right = in_img_right.read();
 	Types::CameraInfo ci_right = in_camera_info_right.read();
+
+	if (pass_through) {
+		out_img_left.write(img_left.clone());
+		out_img_right.write(img_right.clone());
+		return;
+	}
 	
 	//Reprojection matix - Q
     cv::Mat Q(cv::Mat::zeros(4,4, CV_32F));

@@ -138,6 +138,7 @@ private:
 	cv::Mat map1, map2, newK;
 	
 	Base::Property<int> alpha;
+	Base::Property<bool> pass_through;
 	
 	int last_alpha;
 };
