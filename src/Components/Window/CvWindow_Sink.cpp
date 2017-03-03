@@ -38,6 +38,7 @@ CvWindow_Sink::CvWindow_Sink(const std::string & name) :
 
 	registerProperty(mouse_tracking);
 	
+	m_x = m_y = 0;
 }
 
 CvWindow_Sink::~CvWindow_Sink() {
@@ -109,7 +110,7 @@ void CvWindow_Sink::onNewImage() {
 		}
 		
 		if (!in_img_right.empty()) {
-			img_left = in_img_right.read().clone();
+			img_right = in_img_right.read().clone();
 			if (img_right.channels() == 1) {
 				cv::cvtColor(img_right, img_right, CV_GRAY2BGR);
 			}
@@ -136,19 +137,26 @@ void CvWindow_Sink::onRefresh() {
 		
 		cv::Size sl = img_left.size();
 		cv::Size sr = img_right.size();
-		int ll = 0;
-		int lr = sl.width;
-		int rl = lr+1;
-		int rr = rl + sr.width;
-		int lt = 0;
-		int lb = sl.height;
-		int rt = 0;
-		int rb = sr.height;
+		int w = sl.width + sr.width;
+		int h = std::max(sl.height, sr.height);
 		
-		cv::Mat out_img = cv::Mat::zeros(cv::Size(sl.width+sr.width, std::max(sl.height, sr.height)), CV_8UC3);
-		img_left.copyTo(out_img.colRange(ll, lr).rowRange(lt, lb));
-		img_right.copyTo(out_img.colRange(rl, rr).rowRange(rt, rb));
+		cv::Mat out_img = cv::Mat::zeros(cv::Size(w, h), CV_8UC3);
+		cv::Mat roi(out_img, cv::Rect(cv::Point2i(0, 0), sl));
+		img_left.copyTo(roi);
+		cv::Mat roi2(out_img, cv::Rect(cv::Point2i(sl.width, 0), sr));
+		img_right.copyTo(roi2);
 		
+		for (int i = 0; i < points_l.size(); ++i) {
+			cv::circle(out_img, points_l[i], 2, cv::Scalar(64, 192, 64), 2);
+		}
+		
+		for (int i = 0; i < points_r.size(); ++i) {
+			cv::circle(out_img, points_r[i], 2, cv::Scalar(64, 192, 64), 2);
+			cv::line(out_img, points_l[i], points_r[i], cv::Scalar(64, 192, 64));
+		}
+		
+		cv::line(out_img, cv::Point(m_x, 0), cv::Point(m_x, h), cv::Scalar(0, 0, 255));
+		cv::line(out_img, cv::Point(0, m_y), cv::Point(w, m_y), cv::Scalar(0, 0, 255));
 		
 		// Refresh image.
 		imshow(title(), out_img);
@@ -165,9 +173,15 @@ void CvWindow_Sink::onMouseStatic(int event, int x, int y, int flags, void * use
 }
 	
 void CvWindow_Sink::onMouse(int event, int x, int y, int flags) {
-	if (event != 0 || mouse_tracking) {
-		//CLOG(LNOTICE) << "Click in " << titles[window] << " at " << x << "," << y << " [" << event << "]";
-		//out_point[window]->write(cv::Point(x, y));
+	CLOG(LNOTICE) << "Click in at " << x << "," << y << " [" << event << "]";
+	m_x = x;
+	m_y = y;
+	
+	if (event == 1) {
+		if (points_l.size() == points_r.size())
+			points_l.push_back(cv::Point(x, y));
+		else
+			points_r.push_back(cv::Point(x, y));
 	}
 }
 

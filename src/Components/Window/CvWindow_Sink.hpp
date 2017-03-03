@@ -169,6 +169,10 @@ protected:
 	void onMouse(int event, int x, int y, int flags);
 	
 	Base::Property<bool> mouse_tracking;
+	
+	int m_x, m_y;
+	
+	std::vector<cv::Point> points_l, points_r;
 };
 
 }//: namespace CvWindow
@@ -181,4 +185,3 @@ protected:
 REGISTER_COMPONENT("CvWindow", Sinks::CvWindow::CvWindow_Sink)
 
 #endif /* CVWINDOW_SINK_HPP_ */
-
