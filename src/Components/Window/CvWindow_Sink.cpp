@@ -61,6 +61,7 @@ void CvWindow_Sink::prepareInterface() {
 
 	registerStream("in_img_left", &in_img_left);
 	registerStream("in_img_right", &in_img_right);
+	registerStream("in_disparity", &in_disparity);
 
 	registerHandler(std::string("onNewImage"), boost::bind(&CvWindow_Sink::onNewImage, this));
 	addDependency(std::string("onNewImage"), &in_img_left);
@@ -125,6 +126,13 @@ void CvWindow_Sink::onNewImage() {
 				cv::cvtColor(img_right, img_right, CV_GRAY2BGR);
 			}
 		}
+		
+		if (!in_disparity.empty()) {
+			disparity = in_disparity.read().clone();
+			double min, max;
+			cv::minMaxLoc(disparity, &min, &max);
+			m_min_disparity = min;
+		}
 	} catch (std::exception &ex) {
 		CLOG(LERROR) << "CvWindow::onNewImage failed: " << ex.what() << "";
 	}
@@ -177,7 +185,8 @@ void CvWindow_Sink::onRefresh() {
 		case STATE_MOVE: {
 			color = blue;
 			cv::line(out_img, cv::Point(m_x, 0), cv::Point(m_x, h), color);
-			cv::line(out_img, cv::Point(0, m_y), cv::Point(w, m_y), color); }
+			cv::line(out_img, cv::Point(0, m_y), cv::Point(w, m_y), color); 
+			}
 			break;
 		case STATE_WAIT_L: {
 			if (m_x >= m_border) color = red; else color = lime;
@@ -185,15 +194,29 @@ void CvWindow_Sink::onRefresh() {
 			int ry = tmp_point.y;
 			cv::line(out_img, cv::Point(m_x, 0), cv::Point(m_x, h), color);
 			cv::line(out_img, cv::Point(m_border + rx, 0), cv::Point(m_border + rx, h), color);
-			cv::line(out_img, cv::Point(0, ry), cv::Point(w, ry), color); }
+			cv::line(out_img, cv::Point(0, ry), cv::Point(w, ry), color); 
+			}
 			break;
-		case  STATE_WAIT_R: {
+		case STATE_WAIT_R: {
 			if (m_x >= m_border) color = lime; else color = red;
 			int lx = tmp_point.x;
 			int ly = tmp_point.y;
 			cv::line(out_img, cv::Point(m_x, 0), cv::Point(m_x, h), color);
 			cv::line(out_img, cv::Point(lx, 0), cv::Point(lx, h), color);
-			cv::line(out_img, cv::Point(0, ly), cv::Point(w, ly), color); }
+			cv::line(out_img, cv::Point(0, ly), cv::Point(w, ly), color); 
+			}
+			break;
+		case STATE_PEEK:
+			if (disparity.empty()) break;
+			if (m_x < m_border) {
+				float disp = disparity.at<float>(m_y, m_x);
+				if (disp > m_min_disparity) {
+					cv::Point lp(m_x, m_y);
+					cv::Point rp = lp + cv::Point(m_border - disp, 0);
+					cv::line(out_img, lp, rp, green, 2); 
+					cv::line(out_img, lp, rp, lime); 
+				}
+			} 
 			break;
 		default:
 			break;
@@ -216,6 +239,13 @@ void CvWindow_Sink::onMouseStatic(int event, int x, int y, int flags, void * use
 void CvWindow_Sink::onMouse(int event, int x, int y, int flags) {
 	m_x = x;
 	m_y = y;
+	
+	//CLOG(LNOTICE) << event << "/" << flags ;
+	if (flags == EVENT_FLAG_CTRLKEY && m_state == STATE_MOVE) {
+		m_state = STATE_PEEK;
+	} else if (event == EVENT_MOUSEMOVE && flags == 0 && m_state == STATE_PEEK) {
+		m_state = STATE_MOVE;
+	} else
 	
 	if (event == 1) {
 		cv::Point pt = cv::Point(x, y);

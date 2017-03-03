@@ -98,6 +98,7 @@ struct MouseCallbackInfo {
 #define STATE_MOVE 1
 #define STATE_WAIT_L 2
 #define STATE_WAIT_R 3
+#define STATE_PEEK 4
 
 /*!
  * \class CvWindow_Sink
@@ -162,10 +163,13 @@ protected:
 
 	Base::DataStreamIn<Mat, Base::DataStreamBuffer::Newest, Base::Synchronization::Mutex>  in_img_left;
 	Base::DataStreamIn<Mat, Base::DataStreamBuffer::Newest, Base::Synchronization::Mutex>  in_img_right;
+	
+	Base::DataStreamIn<Mat, Base::DataStreamBuffer::Newest, Base::Synchronization::Mutex>  in_disparity;
 
 	/// Image to be drawn.
 	cv::Mat img_left;
 	cv::Mat img_right;
+	cv::Mat disparity;
 
 	Base::Property<std::string> title;
 
@@ -183,6 +187,7 @@ protected:
 	int m_x, m_y;
 	int m_border;
 	int m_state;
+	float m_min_disparity;
 	
 	std::vector<cv::Point> points_l, points_r;
 	cv::Point tmp_point;
