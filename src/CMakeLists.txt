@@ -30,7 +30,7 @@ SET(DisCODe_LIBRARIES ${DisCODe_LIBRARIES} ${Boost_LIBRARIES} )
 # Validate whether components are properly linked to utilized libraries.
 SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs") 
 
-
+ADD_DEFINITIONS(-std=c++11)
 
 # ##############################################################################
 # Add source directories

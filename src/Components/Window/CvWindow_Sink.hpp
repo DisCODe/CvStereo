@@ -95,6 +95,10 @@ struct MouseCallbackInfo {
 	MouseCallbackInfo(CvWindow_Sink * p = NULL) : parent(p) {}
 };
 
+#define STATE_MOVE 1
+#define STATE_WAIT_L 2
+#define STATE_WAIT_R 3
+
 /*!
  * \class CvWindow_Sink
  * \brief Creates a window and displays the image
@@ -150,6 +154,12 @@ protected:
 	 */
 	void onRefresh();
 
+
+	/*!
+	 * Event handler function.
+	 */
+	void onClearPoints();
+
 	Base::DataStreamIn<Mat, Base::DataStreamBuffer::Newest, Base::Synchronization::Mutex>  in_img_left;
 	Base::DataStreamIn<Mat, Base::DataStreamBuffer::Newest, Base::Synchronization::Mutex>  in_img_right;
 
@@ -171,8 +181,18 @@ protected:
 	Base::Property<bool> mouse_tracking;
 	
 	int m_x, m_y;
+	int m_border;
+	int m_state;
 	
 	std::vector<cv::Point> points_l, points_r;
+	cv::Point tmp_point;
+	
+	static const cv::Scalar red;
+	static const cv::Scalar lime;
+	static const cv::Scalar blue;
+	static const cv::Scalar green;
+	static const cv::Scalar black;
+	static const cv::Scalar white;
 };
 
 }//: namespace CvWindow
